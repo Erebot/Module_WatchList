@@ -16,16 +16,16 @@
     along with Erebot.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-class   ErebotModule_WatchList
-extends ErebotModuleBase
+class   Erebot_Module_WatchList
+extends Erebot_Module_Base
 {
     protected $_watchedNicks;
 
     public function reload($flags)
     {
-        $handler    =   new ErebotEventHandler(
+        $handler    =   new Erebot_EventHandler(
                             array($this, 'handleConnect'),
-                            'ErebotEventConnect');
+                            'Erebot_Event_Connect');
         $this->_connection->addEventHandler($handler);
         $watchedNicks = $this->parseString('nicks', '');
         $watchedNicks = str_replace(',', ' ', $watchedNicks);
@@ -33,7 +33,7 @@ extends ErebotModuleBase
                                 explode(' ', $watchedNicks)));
     }
 
-    public function handleConnect(iErebotEvent &$event)
+    public function handleConnect(Erebot_Interface_Event_Generic &$event)
     {
         if (!count($this->_watchedNicks))
             return;
