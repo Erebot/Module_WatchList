@@ -23,14 +23,19 @@ extends Erebot_Module_Base
 
     public function reload($flags)
     {
-        $handler    =   new Erebot_EventHandler(
-                            array($this, 'handleConnect'),
-                            'Erebot_Event_Connect');
-        $this->_connection->addEventHandler($handler);
-        $watchedNicks = $this->parseString('nicks', '');
-        $watchedNicks = str_replace(',', ' ', $watchedNicks);
-        $this->_watchedNicks = array_filter(array_map('trim',
-                                explode(' ', $watchedNicks)));
+        if ($flags & self::RELOAD_HANDLERS) {
+            $handler    =   new Erebot_EventHandler(
+                                array($this, 'handleConnect'),
+                                'Erebot_Event_Connect');
+            $this->_connection->addEventHandler($handler);
+        }
+
+        if ($flags & self::RELOAD_MEMBERS) {
+            $watchedNicks = $this->parseString('nicks', '');
+            $watchedNicks = str_replace(',', ' ', $watchedNicks);
+            $this->_watchedNicks = array_filter(array_map('trim',
+                                    explode(' ', $watchedNicks)));
+        }
     }
 
     public function handleConnect(Erebot_Interface_Event_Generic &$event)
