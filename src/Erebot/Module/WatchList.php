@@ -21,7 +21,7 @@ extends Erebot_Module_Base
 {
     protected $_watchedNicks;
 
-    public function reload($flags)
+    public function _reload($flags)
     {
         if ($flags & self::RELOAD_HANDLERS) {
             $handler    =   new Erebot_EventHandler(
@@ -37,6 +37,10 @@ extends Erebot_Module_Base
             $this->_watchedNicks = array_filter(array_map('trim',
                                     explode(' ', $watchedNicks)));
         }
+    }
+
+    protected function _unload()
+    {
     }
 
     public function handleConnect(Erebot_Interface_Event_Generic &$event)
