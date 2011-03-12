@@ -37,11 +37,11 @@ extends ErebotModuleTestCase
     public function setUp()
     {
         parent::setUp();
-        $this->_module = new WatchListTestHelper(
+        $this->_module = new WatchListTestHelper(NULL);
+        $this->_module->reload(
             $this->_connection,
-            NULL
+            Erebot_Module_Base::RELOAD_MEMBERS
         );
-        $this->_module->reload(Erebot_Module_Base::RELOAD_MEMBERS);
     }
 
     public function tearDown()
