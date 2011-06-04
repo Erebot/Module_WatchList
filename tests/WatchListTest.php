@@ -46,8 +46,8 @@ extends ErebotModuleTestCase
 
     public function tearDown()
     {
+        $this->_module->unload();
         parent::tearDown();
-        unset($this->_module);
     }
 
     public function testWatchNicks()
