@@ -51,8 +51,8 @@ extends Erebot_Module_Base
     public function _reload($flags)
     {
         if ($flags & self::RELOAD_HANDLERS) {
-            $handler    =   new Erebot_EventHandler(
-                array($this, 'handleConnect'),
+            $handler = new Erebot_EventHandler(
+                new Erebot_Callable(array($this, 'handleConnect')),
                 new Erebot_Event_Match_InstanceOf(
                     'Erebot_Interface_Event_Connect'
                 )
@@ -60,7 +60,7 @@ extends Erebot_Module_Base
             $this->_connection->addEventHandler($handler);
 
             $handler = new Erebot_EventHandler(
-                array($this, 'handleCapabilities'),
+                new Erebot_Callable(array($this, 'handleCapabilities')),
                 new Erebot_Event_Match_InstanceOf(
                     'Erebot_Event_ServerCapabilities'
                 )
@@ -68,7 +68,7 @@ extends Erebot_Module_Base
             $this->_connection->addEventHandler($handler);
 
             $handler = new Erebot_RawHandler(
-                array($this, 'handleISON'),
+                new Erebot_Callable(array($this, 'handleISON')),
                 $this->getRawRef('RPL_ISON')
             );
             $this->_connection->addRawHandler($handler);
@@ -91,7 +91,7 @@ extends Erebot_Module_Base
                 $this->_pending = 0;
                 $this->_timer = new Erebot_Timer(
                     new Erebot_Callable(array($this, '_sendRequest')),
-                    15,
+                    $this->parseInt('poll_delay', 15),
                     TRUE
                 );
         }
@@ -158,19 +158,21 @@ extends Erebot_Module_Base
         $this->_pending--;
         $present = array();
 
-        foreach ($raw->getText() as $nick) {
-            $normalized = $this->_connection->normalizeNick($nick);
-            $present[]  = $normalized;
+        if ((string) $raw->getText() != '') {
+            foreach ($raw->getText() as $nick) {
+                $normalized = $this->_connection->normalizeNick($nick);
+                $present[]  = $normalized;
 
-            // That user WAS NOT connected the last time
-            // we polled the server. Flag him as logging in.
-            if (!$this->_watchedNicks[$normalized]) {
-                $this->_watchedNicks[$normalized] = TRUE;
-                $event = $this->_connection->makeEvent(
-                    '!Notify',
-                    $nick, '*', '*', new DateTime(), ''
-                );
-                $this->_connection->dispatch($event);
+                // That user WAS NOT connected the last time
+                // we polled the server. Flag him as logging in.
+                if (!$this->_watchedNicks[$normalized]) {
+                    $this->_watchedNicks[$normalized] = TRUE;
+                    $event = $this->_connection->makeEvent(
+                        '!Notify',
+                        $nick, '*', '*', new DateTime(), ''
+                    );
+                    $this->_connection->dispatch($event);
+                }
             }
         }
 
