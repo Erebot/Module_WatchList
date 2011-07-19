@@ -90,7 +90,7 @@ extends Erebot_Module_Base
             if ($flags & self::RELOAD_INIT)
                 $this->_pending = 0;
                 $this->_timer = new Erebot_Timer(
-                    array($this, '_sendRequest'),
+                    new Erebot_Callable(array($this, '_sendRequest')),
                     15,
                     TRUE
                 );
