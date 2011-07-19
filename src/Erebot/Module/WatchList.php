@@ -43,6 +43,10 @@ extends Erebot_Module_Base
     /// List of nicknames currently being followed by this module.
     protected $_watchedNicks;
 
+    protected $_timer;
+
+    protected $_pending;
+
     /// \copydoc Erebot_Module_Base::_reload()
     public function _reload($flags)
     {
@@ -52,19 +56,56 @@ extends Erebot_Module_Base
                 new Erebot_Event_Match_InstanceOf('Erebot_Interface_Event_Connect')
             );
             $this->_connection->addEventHandler($handler);
+
+            $handler = new Erebot_EventHandler(
+                array($this, 'handleCapabilities'),
+                new Erebot_Event_Match_InstanceOf('Erebot_Event_ServerCapabilities')
+            );
+            $this->_connection->addEventHandler($handler);
+
+            $handler = new Erebot_RawHandler(
+                array($this, 'handleISON'),
+                $this->getRawRef('RPL_ISON')
+            );
+            $this->_connection->addRawHandler($handler);
         }
 
         if ($flags & self::RELOAD_MEMBERS) {
             $watchedNicks = $this->parseString('nicks', '');
             $watchedNicks = str_replace(',', ' ', $watchedNicks);
-            $this->_watchedNicks = array_filter(array_map('trim',
-                                    explode(' ', $watchedNicks)));
+            $watchedNicks = array_filter(array_map('trim',
+                                explode(' ', $watchedNicks)));
+            $this->_watchedNicks = array_combine(
+                $watchedNicks,
+                array_fill(0, count($watchedNicks), FALSE)
+            );
+
+            if ($flags & self::RELOAD_INIT)
+                $this->_pending = 0;
+                $this->_timer = new Erebot_Timer(
+                    array($this, '_sendRequest'),
+                    15,
+                    TRUE
+                );
         }
     }
 
     /// \copydoc Erebot_Module_Base::_unload()
     protected function _unload()
     {
+    }
+
+    protected function _splitNicks()
+    {
+        $nicks = array_keys($this->_watchedNicks);
+        return explode("\n", wordwrap(implode(' ', $nicks), 400));
+    }
+
+    public function handleCapabilities(Erebot_Event_ServerCapabilities $event)
+    {
+        $module = $event->getModule();
+        if ($module->hasCommand('WATCH'))
+            $this->_timer = NULL;
     }
 
     /**
@@ -80,7 +121,77 @@ extends Erebot_Module_Base
         if (!count($this->_watchedNicks))
             return;
 
-        $this->sendCommand('WATCH +'.implode(' +', $this->_watchedNicks));
+        $watchedNicks = array_map(
+            array($this->_connection, 'normalizeNick'),
+            array_keys($this->_watchedNicks)
+        );
+        $this->_watchedNicks = array_combine(
+            $watchedNicks,
+            array_fill(0, count($watchedNicks), FALSE)
+        );
+
+        if ($this->_timer !== NULL) {
+            $this->addTimer($this->_timer);
+            $this->_sendRequest($this->_timer);
+            return;
+        }
+
+        foreach ($this->_splitNicks() as $nicksRow)
+            $this->sendCommand('WATCH +'.str_replace(' ', ' +', $nicksRow));
+    }
+
+    public function handleISON(Erebot_Interface_Event_Raw $raw)
+    {
+        if (!$this->_pending)
+            return;
+
+        $nicksRows  = $this->_splitNicks();
+        $nicksRow   = explode(' ', $nicksRows[count($nicksRows) - $this->_pending]);
+        $this->_pending--;
+        $present = array();
+
+        foreach ($raw->getText() as $nick) {
+            $normalized = $this->_connection->normalizeNick($nick);
+            $present[]  = $normalized;
+
+            // That user WAS NOT connected the last time
+            // we polled the server. Flag him as logging in.
+            if (!$this->_watchedNicks[$normalized]) {
+                $this->_watchedNicks[$normalized] = TRUE;
+                $event = $this->_connection->makeEvent(
+                    '!Notify',
+                    $nick, '*', '*', new DateTime(), ''
+                );
+                $this->_connection->dispatch($event);
+            }
+        }
+
+        $absent = array_diff($nicksRow, $present);
+        foreach ($absent as $normalized) {
+            // That user WAS connected the last time we polled
+            // the server. Flag him as signing out.
+            if ($this->_watchedNicks[$normalized]) {
+                $this->_watchedNicks[$normalized] = FALSE;
+                $event = $this->_connection->makeEvent(
+                    '!UnNotify',
+                    $normalized, '*', '*', new DateTime(), ''
+                );
+                $this->_connection->dispatch($event);
+            }
+        }
+    }
+
+    public function _sendRequest(Erebot_Interface_Timer $timer)
+    {
+        if ($this->_pending)
+            return;
+
+        $nicksRows = $this->_splitNicks();
+        $this->_pending = count($nicksRows);
+        foreach ($nicksRows as $nicksRow)
+            $this->sendCommand('ISON '.$nicksRow);
+
+        return;
     }
 }
 
