@@ -27,7 +27,32 @@ extends Erebot_Module_WatchList
 {
     public function setWatchedNicks($nicks)
     {
-        $this->_watchedNicks = $nicks;
+        $finalNicks = array();
+        foreach ($nicks as $nick)
+            $finalNicks[strtoupper($nick)] = FALSE;
+        $this->_watchedNicks = $finalNicks;
+    }
+
+    public function hasCommand($cmd)
+    {
+        return TRUE;
+    }
+}
+
+class   ServerCapsTestHelper
+extends Erebot_Module_Base
+{
+    protected function _reload($flags)
+    {
+    }
+
+    protected function _unload()
+    {
+    }
+
+    public function hasCommand($cmd)
+    {
+        throw new RuntimeException('Not implemented');
     }
 }
 
@@ -50,14 +75,36 @@ extends ErebotModuleTestCase
         parent::tearDown();
     }
 
-    public function testWatchNicks()
+    public function testUsingWATCH()
+    {
+        $this->_module->setWatchedNicks(array('foo', 'bar', 'baz'));
+
+        // Mock a server that supports the WATCH commands.
+        $caps = $this->getMock('ServerCapsTestHelper', array(), array(NULL), '', FALSE, FALSE);
+        $caps
+            ->expects($this->any())
+            ->method('hasCommand')
+            ->will($this->returnValue(TRUE));
+        $event  = new Erebot_Event_ServerCapabilities($this->_connection, $caps);
+        $this->_module->handleCapabilities($event);
+
+        $event  = new Erebot_Event_Connect($this->_connection);
+        $this->_module->handleConnect($event);
+        $this->assertEquals(1, count($this->_outputBuffer));
+        $this->assertEquals(
+            "WATCH +FOO +BAR +BAZ",
+            $this->_outputBuffer[0]
+        );
+    }
+
+    public function testUsingISON()
     {
         $this->_module->setWatchedNicks(array('foo', 'bar', 'baz'));
         $event = new Erebot_Event_Connect($this->_connection);
         $this->_module->handleConnect($event);
         $this->assertEquals(1, count($this->_outputBuffer));
         $this->assertEquals(
-            "WATCH +foo +bar +baz",
+            "ISON FOO BAR BAZ",
             $this->_outputBuffer[0]
         );
     }
