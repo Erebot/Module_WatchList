@@ -53,13 +53,17 @@ extends Erebot_Module_Base
         if ($flags & self::RELOAD_HANDLERS) {
             $handler    =   new Erebot_EventHandler(
                 array($this, 'handleConnect'),
-                new Erebot_Event_Match_InstanceOf('Erebot_Interface_Event_Connect')
+                new Erebot_Event_Match_InstanceOf(
+                    'Erebot_Interface_Event_Connect'
+                )
             );
             $this->_connection->addEventHandler($handler);
 
             $handler = new Erebot_EventHandler(
                 array($this, 'handleCapabilities'),
-                new Erebot_Event_Match_InstanceOf('Erebot_Event_ServerCapabilities')
+                new Erebot_Event_Match_InstanceOf(
+                    'Erebot_Event_ServerCapabilities'
+                )
             );
             $this->_connection->addEventHandler($handler);
 
@@ -75,10 +79,13 @@ extends Erebot_Module_Base
             $watchedNicks = str_replace(',', ' ', $watchedNicks);
             $watchedNicks = array_filter(array_map('trim',
                                 explode(' ', $watchedNicks)));
-            $this->_watchedNicks = array_combine(
-                $watchedNicks,
-                array_fill(0, count($watchedNicks), FALSE)
-            );
+            if (!count($watchedNicks))
+                $this->_watchedNicks = array();
+            else
+                $this->_watchedNicks = array_combine(
+                    $watchedNicks,
+                    array_fill(0, count($watchedNicks), FALSE)
+                );
 
             if ($flags & self::RELOAD_INIT)
                 $this->_pending = 0;
@@ -146,7 +153,8 @@ extends Erebot_Module_Base
             return;
 
         $nicksRows  = $this->_splitNicks();
-        $nicksRow   = explode(' ', $nicksRows[count($nicksRows) - $this->_pending]);
+        $index      = count($nicksRows) - $this->_pending;
+        $nicksRow   = explode(' ', $nicksRows[$index]);
         $this->_pending--;
         $present = array();
 
