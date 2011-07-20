@@ -108,7 +108,10 @@ extends Erebot_Module_Base
         return explode("\n", wordwrap(implode(' ', $nicks), 400));
     }
 
-    public function handleCapabilities(Erebot_Event_ServerCapabilities $event)
+    public function handleCapabilities(
+        Erebot_Interface_EventHandler   $handler,
+        Erebot_Event_ServerCapabilities $event
+    )
     {
         $module = $event->getModule();
         if ($module->hasCommand('WATCH'))
@@ -123,7 +126,10 @@ extends Erebot_Module_Base
      * \param Erebot_Interface_Event_Connect $event
      *      Connection event.
      */
-    public function handleConnect(Erebot_Interface_Event_Connect $event)
+    public function handleConnect(
+        Erebot_Interface_EventHandler   $handler,
+        Erebot_Interface_Event_Connect  $event
+    )
     {
         if (!count($this->_watchedNicks))
             return;
@@ -147,7 +153,10 @@ extends Erebot_Module_Base
             $this->sendCommand('WATCH +'.str_replace(' ', ' +', $nicksRow));
     }
 
-    public function handleISON(Erebot_Interface_Event_Raw $raw)
+    public function handleISON(
+        Erebot_Interface_RawHandler $handler,
+        Erebot_Interface_Event_Raw  $raw
+    )
     {
         if (!$this->_pending)
             return;
