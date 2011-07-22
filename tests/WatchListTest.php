@@ -86,10 +86,10 @@ extends ErebotModuleTestCase
             ->method('hasCommand')
             ->will($this->returnValue(TRUE));
         $event  = new Erebot_Event_ServerCapabilities($this->_connection, $caps);
-        $this->_module->handleCapabilities($event);
+        $this->_module->handleCapabilities($this->_eventHandler, $event);
 
         $event  = new Erebot_Event_Connect($this->_connection);
-        $this->_module->handleConnect($event);
+        $this->_module->handleConnect($this->_eventHandler, $event);
         $this->assertEquals(1, count($this->_outputBuffer));
         $this->assertEquals(
             "WATCH +FOO +BAR +BAZ",
@@ -101,7 +101,7 @@ extends ErebotModuleTestCase
     {
         $this->_module->setWatchedNicks(array('foo', 'bar', 'baz'));
         $event = new Erebot_Event_Connect($this->_connection);
-        $this->_module->handleConnect($event);
+        $this->_module->handleConnect($this->_eventHandler, $event);
         $this->assertEquals(1, count($this->_outputBuffer));
         $this->assertEquals(
             "ISON FOO BAR BAZ",
