@@ -62,7 +62,7 @@ extends Erebot_Module_Base
             $handler = new Erebot_EventHandler(
                 new Erebot_Callable(array($this, 'handleCapabilities')),
                 new Erebot_Event_Match_InstanceOf(
-                    'Erebot_Event_ServerCapabilities'
+                    'Erebot_Interface_Event_ServerCapabilities'
                 )
             );
             $this->_connection->addEventHandler($handler);
@@ -87,13 +87,14 @@ extends Erebot_Module_Base
                     array_fill(0, count($watchedNicks), FALSE)
                 );
 
-            if ($flags & self::RELOAD_INIT)
+            if ($flags & self::RELOAD_INIT) {
                 $this->_pending = 0;
                 $this->_timer = new Erebot_Timer(
                     new Erebot_Callable(array($this, '_sendRequest')),
                     $this->parseInt('poll_delay', 15),
                     TRUE
                 );
+            }
         }
     }
 
@@ -109,8 +110,8 @@ extends Erebot_Module_Base
     }
 
     public function handleCapabilities(
-        Erebot_Interface_EventHandler   $handler,
-        Erebot_Event_ServerCapabilities $event
+        Erebot_Interface_EventHandler               $handler,
+        Erebot_Interface_Event_ServerCapabilities   $event
     )
     {
         $module = $event->getModule();

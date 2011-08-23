@@ -16,12 +16,6 @@
     along with Erebot.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-require_once(
-    dirname(__FILE__) .
-    DIRECTORY_SEPARATOR . 'testenv' .
-    DIRECTORY_SEPARATOR . 'bootstrap.php'
-);
-
 class   WatchListTestHelper
 extends Erebot_Module_WatchList
 {
@@ -33,9 +27,9 @@ extends Erebot_Module_WatchList
         $this->_watchedNicks = $finalNicks;
     }
 
-    public function hasCommand($cmd)
+    public function simulateTimer($timer)
     {
-        return TRUE;
+        $this->_timer = $timer;
     }
 }
 
@@ -63,10 +57,7 @@ extends ErebotModuleTestCase
     {
         parent::setUp();
         $this->_module = new WatchListTestHelper(NULL);
-        $this->_module->reload(
-            $this->_connection,
-            Erebot_Module_Base::RELOAD_MEMBERS
-        );
+        $this->_module->reload($this->_connection, 0);
     }
 
     public function tearDown()
@@ -85,10 +76,30 @@ extends ErebotModuleTestCase
             ->expects($this->any())
             ->method('hasCommand')
             ->will($this->returnValue(TRUE));
-        $event  = new Erebot_Event_ServerCapabilities($this->_connection, $caps);
+
+        $event = $this->getMock(
+            'Erebot_Interface_Event_ServerCapabilities',
+            array(), array(), '', FALSE, FALSE
+        );
+        $event
+            ->expects($this->any())
+            ->method('getConnection')
+            ->will($this->returnValue($this->_connection));
+        $event
+            ->expects($this->any())
+            ->method('getModule')
+            ->will($this->returnValue($caps));
         $this->_module->handleCapabilities($this->_eventHandler, $event);
 
-        $event  = new Erebot_Event_Connect($this->_connection);
+        $event = $this->getMock(
+            'Erebot_Interface_Event_Connect',
+            array(), array(), '', FALSE, FALSE
+        );
+        $event
+            ->expects($this->any())
+            ->method('getConnection')
+            ->will($this->returnValue($this->_connection));
+
         $this->_module->handleConnect($this->_eventHandler, $event);
         $this->assertEquals(1, count($this->_outputBuffer));
         $this->assertEquals(
@@ -100,7 +111,23 @@ extends ErebotModuleTestCase
     public function testUsingISON()
     {
         $this->_module->setWatchedNicks(array('foo', 'bar', 'baz'));
-        $event = new Erebot_Event_Connect($this->_connection);
+        // Simulate a network where the WATCH command isn't supported and
+        // where a timer was launched to poll the presence of those nicks.
+        $timer = $this->getMock(
+            'Erebot_Interface_Timer',
+            array(), array(), '', FALSE, FALSE
+        );
+        $this->_module->simulateTimer($timer);
+
+        $event = $this->getMock(
+            'Erebot_Interface_Event_Connect',
+            array(), array(), '', FALSE, FALSE
+        );
+        $event
+            ->expects($this->any())
+            ->method('getConnection')
+            ->will($this->returnValue($this->_connection));
+
         $this->_module->handleConnect($this->_eventHandler, $event);
         $this->assertEquals(1, count($this->_outputBuffer));
         $this->assertEquals(
