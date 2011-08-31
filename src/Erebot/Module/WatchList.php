@@ -77,8 +77,9 @@ extends Erebot_Module_Base
         if ($flags & self::RELOAD_MEMBERS) {
             $watchedNicks = $this->parseString('nicks', '');
             $watchedNicks = str_replace(',', ' ', $watchedNicks);
-            $watchedNicks = array_filter(array_map('trim',
-                                explode(' ', $watchedNicks)));
+            $watchedNicks = array_filter(
+                array_map('trim', explode(' ', $watchedNicks))
+            );
             if (!count($watchedNicks))
                 $this->_watchedNicks = array();
             else
