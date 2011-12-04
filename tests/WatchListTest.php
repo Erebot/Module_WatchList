@@ -51,12 +51,12 @@ extends Erebot_Module_Base
 }
 
 class   WatchListTest
-extends ErebotModuleTestCase
+extends Erebot_Testenv_Module_TestCase
 {
     public function setUp()
     {
-        parent::setUp();
         $this->_module = new WatchListTestHelper(NULL);
+        parent::setUp();
         $this->_module->reload($this->_connection, 0);
     }
 
@@ -71,7 +71,15 @@ extends ErebotModuleTestCase
         $this->_module->setWatchedNicks(array('foo', 'bar', 'baz'));
 
         // Mock a server that supports the WATCH commands.
-        $caps = $this->getMock('ServerCapsTestHelper', array(), array(NULL), '', FALSE, FALSE);
+        $caps = $this->getMock(
+            'ServerCapsTestHelper',
+            array(),
+            array(NULL),
+            '',
+            FALSE,
+            FALSE
+        );
+
         $caps
             ->expects($this->any())
             ->method('hasCommand')
