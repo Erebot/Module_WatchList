@@ -180,7 +180,7 @@ extends Erebot_Module_Base
                     $this->_watchedNicks[$normalized] = TRUE;
                     $event = $this->_connection->makeEvent(
                         '!Notify',
-                        $nick, '*', '*', new DateTime(), ''
+                        $nick, NULL, NULL, new DateTime(), ''
                     );
                     $this->_connection->dispatch($event);
                 }
@@ -195,7 +195,7 @@ extends Erebot_Module_Base
                 $this->_watchedNicks[$normalized] = FALSE;
                 $event = $this->_connection->makeEvent(
                     '!UnNotify',
-                    $normalized, '*', '*', new DateTime(), ''
+                    $normalized, NULL, NULL, new DateTime(), ''
                 );
                 $this->_connection->dispatch($event);
             }
