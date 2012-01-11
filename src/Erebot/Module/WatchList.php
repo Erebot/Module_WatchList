@@ -211,8 +211,6 @@ extends Erebot_Module_Base
         $this->_pending = count($nicksRows);
         foreach ($nicksRows as $nicksRow)
             $this->sendCommand('ISON '.$nicksRow);
-
-        return;
     }
 }
 
