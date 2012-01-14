@@ -90,7 +90,8 @@ extends Erebot_Module_Base
 
             if ($flags & self::RELOAD_INIT) {
                 $this->_pending = 0;
-                $this->_timer = new Erebot_Timer(
+                $timerCls = $this->getFactory('!Timer');
+                $this->_timer = new $timerCls(
                     new Erebot_Callable(array($this, '_sendRequest')),
                     $this->parseInt('poll_delay', 15),
                     TRUE
