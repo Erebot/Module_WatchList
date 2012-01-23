@@ -263,6 +263,8 @@ extends Erebot_Module_Base
      *
      * \param Erebot_Interface_Timer $timer
      *      The (periodic) timer that triggered the request.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function _sendRequest(Erebot_Interface_Timer $timer)
     {
