@@ -43,11 +43,24 @@ extends Erebot_Module_Base
     /// List of nicknames currently being followed by this module.
     protected $_watchedNicks;
 
+    /// A timer used to emulate the WATCH command using the ISON command.
     protected $_timer;
 
+    /// Number of nicks sent in an ISON command and avaiting a response.
     protected $_pending;
 
-    /// \copydoc Erebot_Module_Base::_reload()
+    /**
+     * This method is called whenever the module is (re)loaded.
+     *
+     * \param int $flags
+     *      A bitwise OR of the Erebot_Module_Base::RELOAD_*
+     *      constants. Your method should take proper actions
+     *      depending on the value of those flags.
+     *
+     * \note
+     *      See the documentation on individual RELOAD_*
+     *      constants for a list of possible values.
+     */
     public function _reload($flags)
     {
         if ($flags & self::RELOAD_HANDLERS) {
@@ -105,12 +118,37 @@ extends Erebot_Module_Base
     {
     }
 
+    /**
+     * Return a list of strings made of the nicknames
+     * being tracked by this watch list.
+     *
+     * Each string is built so that it can be sent
+     * to the IRC server without being truncated.
+     *
+     * \retval array
+     *      List of strings containing tracked nicknames,
+     *      separated by spaces.
+     */
     protected function _splitNicks()
     {
         $nicks = array_keys($this->_watchedNicks);
         return explode("\n", wordwrap(implode(' ', $nicks), 400));
     }
 
+    /**
+     * Upon connection, requests that the server send notifications
+     * for (dis)connection related to IRC nicknames this modules is
+     * currently following.
+     *
+     * \param Erebot_Interface_EventHandler $handler
+     *      Handler that triggered this event.
+     *
+     * \param Erebot_Interface_Event_ServerCapabilities $event
+     *      Event containing information
+     *      on server capabilities.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
     public function handleCapabilities(
         Erebot_Interface_EventHandler               $handler,
         Erebot_Interface_Event_ServerCapabilities   $event
@@ -126,8 +164,13 @@ extends Erebot_Module_Base
      * for (dis)connection related to IRC nicknames this modules is
      * currently following.
      *
+     * \param Erebot_Interface_EventHandler $handler
+     *      Handler that triggered this event.
+     *
      * \param Erebot_Interface_Event_Connect $event
      *      Connection event.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function handleConnect(
         Erebot_Interface_EventHandler   $handler,
@@ -156,6 +199,17 @@ extends Erebot_Module_Base
             $this->sendCommand('WATCH +'.str_replace(' ', ' +', $nicksRow));
     }
 
+    /**
+     * Handle the response to an ISON command.
+     *
+     * \param Erebot_Interface_EventHandler $handler
+     *      Handler that triggered this event.
+     *
+     * \param Erebot_Interface_Event_Raw $raw
+     *      ISON response.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
     public function handleISON(
         Erebot_Interface_RawHandler $handler,
         Erebot_Interface_Event_Raw  $raw
@@ -203,6 +257,13 @@ extends Erebot_Module_Base
         }
     }
 
+    /**
+     * Send ISON requests to see whether users
+     * in the WATCH list recently logged on/off.
+     *
+     * \param Erebot_Interface_Timer $timer
+     *      The (periodic) timer that triggered the request.
+     */
     public function _sendRequest(Erebot_Interface_Timer $timer)
     {
         if ($this->_pending)
