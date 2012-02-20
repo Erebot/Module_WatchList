@@ -180,8 +180,9 @@ extends Erebot_Module_Base
         if (!count($this->_watchedNicks))
             return;
 
+        $collator = $this->_connection->getCollator();
         $watchedNicks = array_map(
-            array($this->_connection, 'normalizeNick'),
+            array($collator, 'normalizeNick'),
             array_keys($this->_watchedNicks)
         );
         $this->_watchedNicks = array_combine(
@@ -225,8 +226,9 @@ extends Erebot_Module_Base
         $present = array();
 
         if ((string) $raw->getText() != '') {
+            $collator = $this->_connection->getCollator();
             foreach ($raw->getText() as $nick) {
-                $normalized = $this->_connection->normalizeNick($nick);
+                $normalized = $collator->normalizeNick($nick);
                 $present[]  = $normalized;
 
                 // That user WAS NOT connected the last time
