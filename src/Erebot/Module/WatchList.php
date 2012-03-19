@@ -225,6 +225,7 @@ extends Erebot_Module_Base
         $this->_pending--;
         $present = array();
 
+        $eventsProducer = $this->_connection->getEventsProducer();
         if ((string) $raw->getText() != '') {
             $collator = $this->_connection->getCollator();
             foreach ($raw->getText() as $nick) {
@@ -235,7 +236,7 @@ extends Erebot_Module_Base
                 // we polled the server. Flag him as logging in.
                 if (!$this->_watchedNicks[$normalized]) {
                     $this->_watchedNicks[$normalized] = TRUE;
-                    $event = $this->_connection->makeEvent(
+                    $event = $eventsProducer->makeEvent(
                         '!Notify',
                         $nick, NULL, NULL, new DateTime(), ''
                     );
@@ -250,7 +251,7 @@ extends Erebot_Module_Base
             // the server. Flag him as signing out.
             if ($this->_watchedNicks[$normalized]) {
                 $this->_watchedNicks[$normalized] = FALSE;
-                $event = $this->_connection->makeEvent(
+                $event = $eventsProducer->makeEvent(
                     '!UnNotify',
                     $normalized, NULL, NULL, new DateTime(), ''
                 );
