@@ -85,6 +85,9 @@ extends Erebot_Module_Base
                 $this->getRawRef('RPL_ISON')
             );
             $this->_connection->addRawHandler($handler);
+
+            $cls = $this->getFactory('!Callable');
+            $this->registerHelpMethod(new $cls(array($this, 'getHelp')));
         }
 
         if ($flags & self::RELOAD_MEMBERS) {
@@ -116,6 +119,45 @@ extends Erebot_Module_Base
     /// \copydoc Erebot_Module_Base::_unload()
     protected function _unload()
     {
+    }
+
+    /**
+     * Provides help about this module.
+     *
+     * \param Erebot_Interface_Event_Base_TextMessage $event
+     *      Some help request.
+     *
+     * \param Erebot_Interface_TextWrapper $words
+     *      Parameters passed with the request. This is the same
+     *      as this module's name when help is requested on the
+     *      module itself (in opposition with help on a specific
+     *      command provided by the module).
+     */
+    public function getHelp(
+        Erebot_Interface_Event_Base_TextMessage $event,
+        Erebot_Interface_TextWrapper            $words
+    )
+    {
+        if ($event instanceof Erebot_Interface_Event_Base_Private) {
+            $target = $event->getSource();
+            $chan   = NULL;
+        }
+        else
+            $target = $chan = $event->getChan();
+
+        $fmt        = $this->getFormatter($chan);
+        $moduleName = strtolower(get_class());
+        $nbArgs     = count($words);
+
+        if ($nbArgs == 1 && $words[0] == $moduleName) {
+            $msg = $fmt->_(
+                "This module does not provide any command but can be used ".
+                "to get notifications whenever a given user signs on/off an ".
+                "IRC network."
+            );
+            $this->sendMessage($target, $msg);
+            return TRUE;
+        }
     }
 
     /**
