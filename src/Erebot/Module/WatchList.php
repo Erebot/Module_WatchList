@@ -80,11 +80,11 @@ extends Erebot_Module_Base
             );
             $this->_connection->addEventHandler($handler);
 
-            $handler = new Erebot_RawHandler(
+            $handler = new Erebot_NumericHandler(
                 new Erebot_Callable(array($this, 'handleISON')),
-                $this->getRawRef('RPL_ISON')
+                $this->getNumRef('RPL_ISON')
             );
-            $this->_connection->addRawHandler($handler);
+            $this->_connection->addNumericHandler($handler);
 
             $cls = $this->getFactory('!Callable');
             $this->registerHelpMethod(new $cls(array($this, 'getHelp')));
@@ -248,14 +248,14 @@ extends Erebot_Module_Base
      * \param Erebot_Interface_EventHandler $handler
      *      Handler that triggered this event.
      *
-     * \param Erebot_Interface_Event_Raw $raw
+     * \param Erebot_Interface_Event_Numeric $numeric
      *      ISON response.
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function handleISON(
-        Erebot_Interface_RawHandler $handler,
-        Erebot_Interface_Event_Raw  $raw
+        Erebot_Interface_NumericHandler $handler,
+        Erebot_Interface_Event_Numeric  $numeric
     )
     {
         if (!$this->_pending)
@@ -268,9 +268,9 @@ extends Erebot_Module_Base
         $present = array();
 
         $eventsProducer = $this->_connection->getEventsProducer();
-        if ((string) $raw->getText() != '') {
+        if ((string) $numeric->getText() != '') {
             $collator = $this->_connection->getCollator();
-            foreach ($raw->getText() as $nick) {
+            foreach ($numeric->getText() as $nick) {
                 $normalized = $collator->normalizeNick($nick);
                 $present[]  = $normalized;
 
