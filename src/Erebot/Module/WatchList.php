@@ -271,6 +271,8 @@ extends Erebot_Module_Base
         if ((string) $numeric->getText() != '') {
             $collator = $this->_connection->getCollator();
             foreach ($numeric->getText() as $nick) {
+                if (substr($nick, 0, 1) == ':')
+                    $nick = (string) substr($nick, 1);
                 $normalized = $collator->normalizeNick($nick);
                 $present[]  = $normalized;
 
