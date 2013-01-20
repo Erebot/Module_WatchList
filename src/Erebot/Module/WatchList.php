@@ -277,7 +277,7 @@ extends Erebot_Module_Base
                 $present[]  = $normalized;
 
                 // That user WAS NOT connected the last time
-                // we polled the server. Flag him as logging in.
+                // we polled the server. Flag him as signing on.
                 if (!$this->_watchedNicks[$normalized]) {
                     $this->_watchedNicks[$normalized] = TRUE;
                     $event = $eventsProducer->makeEvent(
