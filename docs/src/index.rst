@@ -19,12 +19,12 @@ Contents:
     Configuration
     Usage
 
-Current status on http://travis-ci.org/:
 
-..  image:: https://secure.travis-ci.org/Erebot/Erebot_Module_WatchList.png
-    :alt: unknown
-    :target: http://travis-ci.org/#!/Erebot/Erebot_Module_WatchList/
+Current status on http://travis-ci.org/: |travis|
 
+..  |travis| image:: https://secure.travis-ci.org/Erebot/Erebot_Module_WatchList.png
+    :alt: UNKNOWN
+    :target: https://travis-ci.org/Erebot/Erebot_Module_WatchList/
 
 ..  _`Erebot`:
     https://www.erebot.net/
