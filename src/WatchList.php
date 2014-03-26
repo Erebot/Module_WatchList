@@ -16,6 +16,8 @@
     along with Erebot.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+namespace Erebot\Module;
+
 /**
  * \brief
  *      A module that can be used to manage the bot's IRC WATCH list.
@@ -37,23 +39,22 @@
  *      command to monitor (dis)connections, depending on the
  *      number of nicks it has to track.
  */
-class   Erebot_Module_WatchList
-extends Erebot_Module_Base
+class WatchList extends \Erebot\Module\Base implements \Erebot\Interfaces\HelpEnabled
 {
     /// List of nicknames currently being followed by this module.
-    protected $_watchedNicks;
+    protected $watchedNicks;
 
     /// A timer used to emulate the WATCH command using the ISON command.
-    protected $_timer;
+    protected $timer;
 
     /// Number of nicks sent in an ISON command and avaiting a response.
-    protected $_pending;
+    protected $pending;
 
     /**
      * This method is called whenever the module is (re)loaded.
      *
      * \param int $flags
-     *      A bitwise OR of the Erebot_Module_Base::RELOAD_*
+     *      A bitwise OR of the Erebot::Module::Base::RELOAD_*
      *      constants. Your method should take proper actions
      *      depending on the value of those flags.
      *
@@ -61,33 +62,31 @@ extends Erebot_Module_Base
      *      See the documentation on individual RELOAD_*
      *      constants for a list of possible values.
      */
-    public function _reload($flags)
+    public function reload($flags)
     {
+        $callableCls = $this->getFactory('!Callable');
         if ($flags & self::RELOAD_HANDLERS) {
-            $handler = new Erebot_EventHandler(
-                new Erebot_Callable(array($this, 'handleConnect')),
-                new Erebot_Event_Match_InstanceOf(
-                    'Erebot_Interface_Event_Connect'
+            $handler = new \Erebot\EventHandler(
+                new $callableCls(array($this, 'handleConnect')),
+                new \Erebot\Event\Match\Type(
+                    '\\Erebot\\Interfaces\\Event\\Connect'
                 )
             );
-            $this->_connection->addEventHandler($handler);
+            $this->connection->addEventHandler($handler);
 
-            $handler = new Erebot_EventHandler(
-                new Erebot_Callable(array($this, 'handleCapabilities')),
-                new Erebot_Event_Match_InstanceOf(
-                    'Erebot_Interface_Event_ServerCapabilities'
+            $handler = new \Erebot\EventHandler(
+                new $callableCls(array($this, 'handleCapabilities')),
+                new \Erebot\Event\Match\Type(
+                    '\\Erebot\\Interfaces\\Event\\ServerCapabilities'
                 )
             );
-            $this->_connection->addEventHandler($handler);
+            $this->connection->addEventHandler($handler);
 
-            $handler = new Erebot_NumericHandler(
-                new Erebot_Callable(array($this, 'handleISON')),
+            $handler = new \Erebot\NumericHandler(
+                new $callableCls(array($this, 'handleISON')),
                 $this->getNumRef('RPL_ISON')
             );
-            $this->_connection->addNumericHandler($handler);
-
-            $cls = $this->getFactory('!Callable');
-            $this->registerHelpMethod(new $cls(array($this, 'getHelp')));
+            $this->connection->addNumericHandler($handler);
         }
 
         if ($flags & self::RELOAD_MEMBERS) {
@@ -96,54 +95,49 @@ extends Erebot_Module_Base
             $watchedNicks = array_filter(
                 array_map('trim', explode(' ', $watchedNicks))
             );
-            if (!count($watchedNicks))
-                $this->_watchedNicks = array();
-            else
-                $this->_watchedNicks = array_combine(
+            if (!count($watchedNicks)) {
+                $this->watchedNicks = array();
+            } else {
+                $this->watchedNicks = array_combine(
                     $watchedNicks,
-                    array_fill(0, count($watchedNicks), FALSE)
+                    array_fill(0, count($watchedNicks), false)
                 );
+            }
 
             if ($flags & self::RELOAD_INIT) {
-                $this->_pending = 0;
+                $this->pending = 0;
                 $timerCls = $this->getFactory('!Timer');
-                $this->_timer = new $timerCls(
-                    new Erebot_Callable(array($this, '_sendRequest')),
+                $this->timer = new $timerCls(
+                    new $callableCls(array($this, 'sendRequest')),
                     $this->parseInt('poll_delay', 15),
-                    TRUE
+                    true
                 );
             }
         }
     }
 
-    /// \copydoc Erebot_Module_Base::_unload()
-    protected function _unload()
-    {
-    }
-
     /**
      * Provides help about this module.
      *
-     * \param Erebot_Interface_Event_Base_TextMessage $event
+     * \param Erebot::Interfaces::Event::Base::TextMessage $event
      *      Some help request.
      *
-     * \param Erebot_Interface_TextWrapper $words
+     * \param Erebot::Interfaces::TextWrapper $words
      *      Parameters passed with the request. This is the same
      *      as this module's name when help is requested on the
      *      module itself (in opposition with help on a specific
      *      command provided by the module).
      */
     public function getHelp(
-        Erebot_Interface_Event_Base_TextMessage $event,
-        Erebot_Interface_TextWrapper            $words
-    )
-    {
-        if ($event instanceof Erebot_Interface_Event_Base_Private) {
+        \Erebot\Interfaces\Event\Base\TextMessage $event,
+        \Erebot\Interfaces\TextWrapper $words
+    ) {
+        if ($event instanceof \Erebot\Interfaces\Event\Base\PrivateMessage) {
             $target = $event->getSource();
-            $chan   = NULL;
-        }
-        else
+            $chan   = null;
+        } else {
             $target = $chan = $event->getChan();
+        }
 
         $fmt        = $this->getFormatter($chan);
         $moduleName = strtolower(get_class());
@@ -156,7 +150,7 @@ extends Erebot_Module_Base
                 "IRC network."
             );
             $this->sendMessage($target, $msg);
-            return TRUE;
+            return true;
         }
     }
 
@@ -171,9 +165,9 @@ extends Erebot_Module_Base
      *      List of strings containing tracked nicknames,
      *      separated by spaces.
      */
-    protected function _splitNicks()
+    protected function splitNicks()
     {
-        $nicks = array_keys($this->_watchedNicks);
+        $nicks = array_keys($this->watchedNicks);
         return explode("\n", wordwrap(implode(' ', $nicks), 400));
     }
 
@@ -182,23 +176,23 @@ extends Erebot_Module_Base
      * for (dis)connection related to IRC nicknames this modules is
      * currently following.
      *
-     * \param Erebot_Interface_EventHandler $handler
+     * \param Erebot::Interfaces::EventHandler $handler
      *      Handler that triggered this event.
      *
-     * \param Erebot_Interface_Event_ServerCapabilities $event
+     * \param Erebot::Interfaces::Event::ServerCapabilities $event
      *      Event containing information
      *      on server capabilities.
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function handleCapabilities(
-        Erebot_Interface_EventHandler               $handler,
-        Erebot_Interface_Event_ServerCapabilities   $event
-    )
-    {
+        \Erebot\Interfaces\EventHandler $handler,
+        \Erebot\Interfaces\Event\ServerCapabilities $event
+    ) {
         $module = $event->getModule();
-        if ($module->hasCommand('WATCH'))
-            $this->_timer = NULL;
+        if ($module->hasCommand('WATCH')) {
+            $this->timer = null;
+        }
     }
 
     /**
@@ -206,85 +200,91 @@ extends Erebot_Module_Base
      * for (dis)connection related to IRC nicknames this modules is
      * currently following.
      *
-     * \param Erebot_Interface_EventHandler $handler
+     * \param Erebot::Interfaces::EventHandler $handler
      *      Handler that triggered this event.
      *
-     * \param Erebot_Interface_Event_Connect $event
+     * \param Erebot::Interfaces::Event::Connect $event
      *      Connection event.
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function handleConnect(
-        Erebot_Interface_EventHandler   $handler,
-        Erebot_Interface_Event_Connect  $event
-    )
-    {
-        if (!count($this->_watchedNicks))
-            return;
-
-        $collator = $this->_connection->getCollator();
-        $watchedNicks = array_map(
-            array($collator, 'normalizeNick'),
-            array_keys($this->_watchedNicks)
-        );
-        $this->_watchedNicks = array_combine(
-            $watchedNicks,
-            array_fill(0, count($watchedNicks), FALSE)
-        );
-
-        if ($this->_timer !== NULL) {
-            $this->addTimer($this->_timer);
-            $this->_sendRequest($this->_timer);
+        \Erebot\Interfaces\EventHandler $handler,
+        \Erebot\Interfaces\Event\Connect $event
+    ) {
+        if (!count($this->watchedNicks)) {
             return;
         }
 
-        foreach ($this->_splitNicks() as $nicksRow)
+        $collator = $this->connection->getCollator();
+        $watchedNicks = array_map(
+            array($collator, 'normalizeNick'),
+            array_keys($this->watchedNicks)
+        );
+        $this->watchedNicks = array_combine(
+            $watchedNicks,
+            array_fill(0, count($watchedNicks), false)
+        );
+
+        if ($this->timer !== null) {
+            $this->addTimer($this->timer);
+            $this->sendRequest($this->timer);
+            return;
+        }
+
+        foreach ($this->splitNicks() as $nicksRow) {
             $this->sendCommand('WATCH +'.str_replace(' ', ' +', $nicksRow));
+        }
     }
 
     /**
      * Handle the response to an ISON command.
      *
-     * \param Erebot_Interface_EventHandler $handler
+     * \param Erebot::Interfaces::EventHandler $handler
      *      Handler that triggered this event.
      *
-     * \param Erebot_Interface_Event_Numeric $numeric
+     * \param Erebot::Interfaces::Event::Numeric $numeric
      *      ISON response.
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function handleISON(
-        Erebot_Interface_NumericHandler $handler,
-        Erebot_Interface_Event_Numeric  $numeric
-    )
-    {
-        if (!$this->_pending)
+        \Erebot\Interfaces\NumericHandler $handler,
+        \Erebot\Interfaces\Event\Numeric $numeric
+    ) {
+        if (!$this->pending) {
             return;
+        }
 
-        $nicksRows  = $this->_splitNicks();
-        $index      = count($nicksRows) - $this->_pending;
+        $nicksRows  = $this->splitNicks();
+        $index      = count($nicksRows) - $this->pending;
         $nicksRow   = explode(' ', $nicksRows[$index]);
-        $this->_pending--;
+        $this->pending--;
         $present = array();
 
-        $eventsProducer = $this->_connection->getEventsProducer();
+        $eventsProducer = $this->connection->getEventsProducer();
         if ((string) $numeric->getText() != '') {
-            $collator = $this->_connection->getCollator();
+            $collator = $this->connection->getCollator();
             foreach ($numeric->getText() as $nick) {
-                if (substr($nick, 0, 1) == ':')
+                if (substr($nick, 0, 1) == ':') {
                     $nick = (string) substr($nick, 1);
+                }
                 $normalized = $collator->normalizeNick($nick);
                 $present[]  = $normalized;
 
                 // That user WAS NOT connected the last time
                 // we polled the server. Flag him as signing on.
-                if (!$this->_watchedNicks[$normalized]) {
-                    $this->_watchedNicks[$normalized] = TRUE;
+                if (!$this->watchedNicks[$normalized]) {
+                    $this->watchedNicks[$normalized] = true;
                     $event = $eventsProducer->makeEvent(
                         '!Notify',
-                        $nick, NULL, NULL, new DateTime(), ''
+                        $nick,
+                        null,
+                        null,
+                        new \DateTime(),
+                        ''
                     );
-                    $this->_connection->dispatch($event);
+                    $this->connection->dispatch($event);
                 }
             }
         }
@@ -293,13 +293,17 @@ extends Erebot_Module_Base
         foreach ($absent as $normalized) {
             // That user WAS connected the last time we polled
             // the server. Flag him as signing out.
-            if ($this->_watchedNicks[$normalized]) {
-                $this->_watchedNicks[$normalized] = FALSE;
+            if ($this->watchedNicks[$normalized]) {
+                $this->watchedNicks[$normalized] = false;
                 $event = $eventsProducer->makeEvent(
                     '!UnNotify',
-                    $normalized, NULL, NULL, new DateTime(), ''
+                    $normalized,
+                    null,
+                    null,
+                    new \DateTime(),
+                    ''
                 );
-                $this->_connection->dispatch($event);
+                $this->connection->dispatch($event);
             }
         }
     }
@@ -308,20 +312,21 @@ extends Erebot_Module_Base
      * Send ISON requests to see whether users
      * in the WATCH list recently logged on/off.
      *
-     * \param Erebot_Interface_Timer $timer
+     * \param Erebot::TimerInterface $timer
      *      The (periodic) timer that triggered the request.
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function _sendRequest(Erebot_Interface_Timer $timer)
+    public function sendRequest(\Erebot\TimerInterface $timer)
     {
-        if ($this->_pending)
+        if ($this->pending) {
             return;
+        }
 
-        $nicksRows = $this->_splitNicks();
-        $this->_pending = count($nicksRows);
-        foreach ($nicksRows as $nicksRow)
+        $nicksRows = $this->splitNicks();
+        $this->pending = count($nicksRows);
+        foreach ($nicksRows as $nicksRow) {
             $this->sendCommand('ISON '.$nicksRow);
+        }
     }
 }
-

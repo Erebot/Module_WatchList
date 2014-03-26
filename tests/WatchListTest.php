@@ -17,30 +17,26 @@
 */
 
 class   WatchListTestHelper
-extends Erebot_Module_WatchList
+extends \Erebot\Module\WatchList
 {
     public function setWatchedNicks($nicks)
     {
         $finalNicks = array();
         foreach ($nicks as $nick)
             $finalNicks[strtoupper($nick)] = FALSE;
-        $this->_watchedNicks = $finalNicks;
+        $this->watchedNicks = $finalNicks;
     }
 
     public function simulateTimer($timer)
     {
-        $this->_timer = $timer;
+        $this->timer = $timer;
     }
 }
 
 class   ServerCapsTestHelper
-extends Erebot_Module_Base
+extends \Erebot\Module\Base
 {
-    protected function _reload($flags)
-    {
-    }
-
-    protected function _unload()
+    protected function reload($flags)
     {
     }
 
@@ -57,12 +53,12 @@ extends Erebot_Testenv_Module_TestCase
     {
         $this->_module = new WatchListTestHelper(NULL);
         parent::setUp();
-        $this->_module->reload($this->_connection, 0);
+        $this->_module->reloadModule($this->_connection, 0);
     }
 
     public function tearDown()
     {
-        $this->_module->unload();
+        $this->_module->unloadModule();
         parent::tearDown();
     }
 
@@ -86,7 +82,7 @@ extends Erebot_Testenv_Module_TestCase
             ->will($this->returnValue(TRUE));
 
         $event = $this->getMock(
-            'Erebot_Interface_Event_ServerCapabilities',
+            '\\Erebot\\Interfaces\\Event\\ServerCapabilities',
             array(), array(), '', FALSE, FALSE
         );
         $event
@@ -100,7 +96,7 @@ extends Erebot_Testenv_Module_TestCase
         $this->_module->handleCapabilities($this->_eventHandler, $event);
 
         $event = $this->getMock(
-            'Erebot_Interface_Event_Connect',
+            '\\Erebot\\Interfaces\\Event\\Connect',
             array(), array(), '', FALSE, FALSE
         );
         $event
@@ -122,13 +118,13 @@ extends Erebot_Testenv_Module_TestCase
         // Simulate a network where the WATCH command isn't supported and
         // where a timer was launched to poll the presence of those nicks.
         $timer = $this->getMock(
-            'Erebot_Interface_Timer',
+            '\\Erebot\\TimerInterface',
             array(), array(), '', FALSE, FALSE
         );
         $this->_module->simulateTimer($timer);
 
         $event = $this->getMock(
-            'Erebot_Interface_Event_Connect',
+            '\\Erebot\\Interfaces\\Event\\Connect',
             array(), array(), '', FALSE, FALSE
         );
         $event
