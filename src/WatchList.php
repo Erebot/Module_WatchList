@@ -64,10 +64,9 @@ class WatchList extends \Erebot\Module\Base implements \Erebot\Interfaces\HelpEn
      */
     public function reload($flags)
     {
-        $callableCls = $this->getFactory('!Callable');
         if ($flags & self::RELOAD_HANDLERS) {
             $handler = new \Erebot\EventHandler(
-                new $callableCls(array($this, 'handleConnect')),
+                \Erebot\CallableWrapper::wrap(array($this, 'handleConnect')),
                 new \Erebot\Event\Match\Type(
                     '\\Erebot\\Interfaces\\Event\\Connect'
                 )
@@ -75,7 +74,7 @@ class WatchList extends \Erebot\Module\Base implements \Erebot\Interfaces\HelpEn
             $this->connection->addEventHandler($handler);
 
             $handler = new \Erebot\EventHandler(
-                new $callableCls(array($this, 'handleCapabilities')),
+                \Erebot\CallableWrapper::wrap(array($this, 'handleCapabilities')),
                 new \Erebot\Event\Match\Type(
                     '\\Erebot\\Interfaces\\Event\\ServerCapabilities'
                 )
@@ -83,7 +82,7 @@ class WatchList extends \Erebot\Module\Base implements \Erebot\Interfaces\HelpEn
             $this->connection->addEventHandler($handler);
 
             $handler = new \Erebot\NumericHandler(
-                new $callableCls(array($this, 'handleISON')),
+                \Erebot\CallableWrapper::wrap(array($this, 'handleISON')),
                 $this->getNumRef('RPL_ISON')
             );
             $this->connection->addNumericHandler($handler);
@@ -108,7 +107,7 @@ class WatchList extends \Erebot\Module\Base implements \Erebot\Interfaces\HelpEn
                 $this->pending = 0;
                 $timerCls = $this->getFactory('!Timer');
                 $this->timer = new $timerCls(
-                    new $callableCls(array($this, 'sendRequest')),
+                    \Erebot\CallableWrapper::wrap(array($this, 'sendRequest')),
                     $this->parseInt('poll_delay', 15),
                     true
                 );
