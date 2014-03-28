@@ -51,7 +51,6 @@ extends Erebot_Testenv_Module_TestCase
 {
     public function setUp()
     {
-        \Erebot\CallableWrapper::initialize();
         $this->_module = new WatchListTestHelper(NULL);
         parent::setUp();
         $this->_module->reloadModule($this->_connection, 0);
