@@ -138,12 +138,8 @@ class WatchList extends \Erebot\Module\Base implements \Erebot\Interfaces\HelpEn
             $target = $chan = $event->getChan();
         }
 
-        $fmt        = $this->getFormatter($chan);
-        $moduleName = strtolower(get_class());
-        $nbArgs     = count($words);
-
-        if ($nbArgs == 1 && $words[0] == $moduleName) {
-            $msg = $fmt->_(
+        if (count($words) == 1 && $words[0] === get_called_class()) {
+            $msg = $this->getFormatter($chan)->_(
                 "This module does not provide any command but can be used ".
                 "to get notifications whenever a given user signs on/off an ".
                 "IRC network."
