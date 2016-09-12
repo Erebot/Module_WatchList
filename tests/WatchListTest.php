@@ -67,24 +67,15 @@ extends Erebot_Testenv_Module_TestCase
         $this->_module->setWatchedNicks(array('foo', 'bar', 'baz'));
 
         // Mock a server that supports the WATCH commands.
-        $caps = $this->getMock(
-            'ServerCapsTestHelper',
-            array(),
-            array(NULL),
-            '',
-            FALSE,
-            FALSE
-        );
-
+        $caps = $this->getMockBuilder('ServerCapsTestHelper')
+            ->disableOriginalConstructor()
+            ->getMock();
         $caps
             ->expects($this->any())
             ->method('hasCommand')
             ->will($this->returnValue(TRUE));
 
-        $event = $this->getMock(
-            '\\Erebot\\Interfaces\\Event\\ServerCapabilities',
-            array(), array(), '', FALSE, FALSE
-        );
+        $event = $this->getMockBuilder('\\Erebot\\Interfaces\\Event\\ServerCapabilities')->getMock();
         $event
             ->expects($this->any())
             ->method('getConnection')
@@ -95,10 +86,7 @@ extends Erebot_Testenv_Module_TestCase
             ->will($this->returnValue($caps));
         $this->_module->handleCapabilities($this->_eventHandler, $event);
 
-        $event = $this->getMock(
-            '\\Erebot\\Interfaces\\Event\\Connect',
-            array(), array(), '', FALSE, FALSE
-        );
+        $event = $this->getMockBuilder('\\Erebot\\Interfaces\\Event\\Connect')->getMock();
         $event
             ->expects($this->any())
             ->method('getConnection')
@@ -117,16 +105,10 @@ extends Erebot_Testenv_Module_TestCase
         $this->_module->setWatchedNicks(array('foo', 'bar', 'baz'));
         // Simulate a network where the WATCH command isn't supported and
         // where a timer was launched to poll the presence of those nicks.
-        $timer = $this->getMock(
-            '\\Erebot\\TimerInterface',
-            array(), array(), '', FALSE, FALSE
-        );
+        $timer = $this->getMockBuilder('\\Erebot\\TimerInterface')->getMock();
         $this->_module->simulateTimer($timer);
 
-        $event = $this->getMock(
-            '\\Erebot\\Interfaces\\Event\\Connect',
-            array(), array(), '', FALSE, FALSE
-        );
+        $event = $this->getMockBuilder('\\Erebot\\Interfaces\\Event\\Connect')->getMock();
         $event
             ->expects($this->any())
             ->method('getConnection')
