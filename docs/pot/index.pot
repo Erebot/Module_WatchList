@@ -1,0 +1,38 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2011-2016, Erebot
+# This file is distributed under the same license as the Erebot_Module_WatchList package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Erebot_Module_WatchList 1.0.x-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-12-30 00:17+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../src/index.rst:10
+msgid "Welcome to the documentation for Erebot_Module_WatchList!"
+msgstr ""
+
+#: ../src/index.rst:12
+msgid "|project| is a module for `Erebot`_ that can be used to handle a WATCH list, ie. track when some user (dis)connects."
+msgstr ""
+
+#: ../src/index.rst:15
+msgid "The WATCH list is implemented using either the ``ISON`` command (see :rfc:`2812#section-4.9`) or the ``WATCH`` extension (see http://docs.dal.net/docs/misc.html#4). Exactly which mechanism is used depends on what the IRC server supports."
+msgstr ""
+
+#: ../src/index.rst:20
+msgid "Contents:"
+msgstr ""
+
+#: ../src/index.rst:31
+msgid "Current status on http://travis-ci.org/: |travis|"
+msgstr ""
+
